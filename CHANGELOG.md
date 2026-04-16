@@ -6,6 +6,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] - 2026-04-17
+
+### Added
+
+- `src/carbon_sequestration_estimator.py`: New module estimating above-ground
+  biomass (AGB) accumulation and CO2-equivalent (CO2e) sequestration for
+  reforestation sites.  Key functions:
+  - `estimate_site_sequestration` — single-site estimate using a
+    Chapman-Richards sigmoidal growth curve parameterised per climate zone
+    (tropical_moist, tropical_dry, montane, peat_swamp) with IPCC Tier-1
+    default peak-AGB values and below-ground biomass ratio.
+  - `estimate_dataframe_sequestration` — batch estimation over a pandas
+    DataFrame with optional per-row climate-zone and biomass-factor columns;
+    returns a new DataFrame (input is never mutated).
+  - `summarise_portfolio` — aggregate CO2e totals, area-weighted annual rate,
+    and min/max across a list of `SequestrationEstimate` dataclass records.
+  - `SequestrationEstimate` — frozen dataclass holding per-site metrics
+    including the full annual CO2e time series.
+- `tests/test_carbon_sequestration_estimator.py`: 46 pytest tests covering
+  growth-curve behaviour, happy-path estimation, all climate zones
+  (parametrized), rotation-period edge cases (1, 10, 50, 100 years),
+  invalid-input validation, immutability, determinism, single-row DataFrames,
+  missing-column errors, and portfolio aggregation.
+
+---
+
 ## [0.2.0] - 2026-04-16
 
 ### Added

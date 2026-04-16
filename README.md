@@ -94,6 +94,73 @@ for warning in result.warnings:
     print(f"WARNING: {warning}")
 ```
 
+## New: Carbon Sequestration Estimator
+
+Estimate above-ground biomass (AGB) accumulation and CO2-equivalent (CO2e)
+sequestration for one or many reforestation sites over a configurable rotation
+period.  The model uses Chapman-Richards sigmoidal growth curves calibrated to
+IPCC Tier-1 Tier-1 defaults for four tropical climate zones.
+
+### Estimate a single site
+
+```python
+from src.carbon_sequestration_estimator import estimate_site_sequestration
+
+est = estimate_site_sequestration(
+    site_id="SITE-KAL-001",
+    area_ha=50.0,                    # hectares
+    climate_zone="tropical_moist",   # or tropical_dry | montane | peat_swamp
+    rotation_years=30,
+    biomass_factor=1.0,              # 1.0 = mixed native tropical species
+)
+
+print(f"Total CO2e sequestered : {est.total_co2e_Mg:,.1f} Mg CO2e")
+print(f"Annual rate            : {est.co2e_per_ha_per_year:.2f} Mg CO2e / ha / yr")
+# Total CO2e sequestered : 55,347.8 Mg CO2e
+# Annual rate            : 36.90 Mg CO2e / ha / yr
+```
+
+### Batch-estimate from a DataFrame
+
+```python
+import pandas as pd
+from src.carbon_sequestration_estimator import estimate_dataframe_sequestration
+
+sites = pd.read_csv("demo/sample_data.csv")
+# Add an area_ha column (not in the core schema — supply your own field data)
+sites = sites.assign(area_ha=75.0)
+
+result = estimate_dataframe_sequestration(
+    sites,
+    area_ha_col="area_ha",
+    default_climate_zone="tropical_moist",
+    rotation_years=30,
+)
+print(result[["site_id", "total_co2e_Mg", "co2e_per_ha_per_year"]].head())
+```
+
+### Summarise a portfolio
+
+```python
+from src.carbon_sequestration_estimator import (
+    estimate_site_sequestration,
+    summarise_portfolio,
+)
+
+estimates = [
+    estimate_site_sequestration("SITE-A", 50.0, "tropical_moist", 30),
+    estimate_site_sequestration("SITE-B", 120.0, "tropical_dry", 30),
+    estimate_site_sequestration("SITE-C", 80.0, "peat_swamp", 30),
+]
+summary = summarise_portfolio(estimates)
+print(f"Portfolio: {summary['total_sites']} sites, "
+      f"{summary['total_area_ha']:.0f} ha, "
+      f"{summary['total_co2e_Mg']:,.0f} Mg CO2e total")
+```
+
+Supported climate zones: `tropical_moist`, `tropical_dry`, `montane`, `peat_swamp`.
+All functions return new objects and never mutate their inputs.
+
 ## Sample Output
 
 Running `python examples/basic_usage.py` on the bundled demo data produces:
