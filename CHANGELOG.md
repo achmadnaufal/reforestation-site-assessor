@@ -6,6 +6,43 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] - 2026-04-18
+
+### Added
+
+- `src/erosion_risk_scorer.py`: New module computing an integrated soil
+  erosion-risk score (0-100) per reforestation site by combining slope,
+  rainfall erosivity, soil erodibility, and current land-cover protection.
+  Inspired by the RUSLE factor framework (R, K, LS, C) but rescaled to a
+  bounded site-prioritisation index. Public API:
+  - `score_slope_erosion`, `score_rainfall_erosivity`,
+    `score_soil_erodibility`, `score_land_cover_protection` -- component
+    scorers, each returning a value in [0, 100].
+  - `compute_erosion_risk` -- single-site composite scorer returning an
+    immutable `ErosionRiskBreakdown` dataclass with sub-scores, the
+    composite score, and a categorical band (`low`, `moderate`, `high`,
+    `severe`). Validates that custom weights cover all four components,
+    are non-negative, and sum to 1.0.
+  - `score_erosion_dataframe` -- batch scorer returning a new DataFrame
+    with six added columns (`erosion_slope_score`, ...,
+    `erosion_risk_class`); the input is never mutated and missing
+    columns raise a clear `KeyError`.
+  - `DEFAULT_EROSION_WEIGHTS` -- default weight mapping (slope 0.40,
+    rainfall 0.25, soil 0.20, land_cover 0.15).
+- `tests/test_erosion_risk_scorer.py`: 42 pytest tests covering component
+  scorers, monotonicity, saturation, case-insensitive lookups, risk-band
+  boundaries, custom-weight validation (missing keys, negative weight,
+  weights not summing to 1.0), DataFrame happy path, empty DataFrame,
+  missing-column errors, and input immutability.
+
+### Changed
+
+- `src/__init__.py`: Re-exports the new erosion-risk public API.
+- `README.md`: Added "Soil Erosion Risk Scorer" section with single-site,
+  DataFrame, and custom-weight examples.
+
+---
+
 ## [Unreleased] - 2026-04-17
 
 ### Added

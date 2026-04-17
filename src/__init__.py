@@ -33,6 +33,16 @@ from src.validators import (
     validate_score,
     validate_slope,
 )
+from src.erosion_risk_scorer import (
+    DEFAULT_EROSION_WEIGHTS,
+    ErosionRiskBreakdown,
+    compute_erosion_risk,
+    score_erosion_dataframe,
+    score_land_cover_protection,
+    score_rainfall_erosivity,
+    score_slope_erosion,
+    score_soil_erodibility,
+)
 
 __all__ = [
     "SiteAssessor",
@@ -53,4 +63,12 @@ __all__ = [
     "validate_rainfall",
     "validate_score",
     "validate_slope",
+    "DEFAULT_EROSION_WEIGHTS",
+    "ErosionRiskBreakdown",
+    "compute_erosion_risk",
+    "score_erosion_dataframe",
+    "score_land_cover_protection",
+    "score_rainfall_erosivity",
+    "score_slope_erosion",
+    "score_soil_erodibility",
 ]

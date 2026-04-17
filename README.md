@@ -161,6 +161,57 @@ print(f"Portfolio: {summary['total_sites']} sites, "
 Supported climate zones: `tropical_moist`, `tropical_dry`, `montane`, `peat_swamp`.
 All functions return new objects and never mutate their inputs.
 
+## New: Soil Erosion Risk Scorer
+
+Compute an integrated erosion-risk index per site, combining slope, rainfall
+erosivity, soil erodibility, and current land cover into a bounded 0-100
+score with a categorical band (`low`, `moderate`, `high`, `severe`). The
+formulation is inspired by the RUSLE factor framework (R, K, LS, C) and is
+intended for first-order site prioritisation rather than quantitative
+soil-loss prediction. Use it to flag sites that need protective
+interventions (terracing, contour planting, fast-establishing pioneers).
+
+### Score a single site
+
+```python
+from src.erosion_risk_scorer import compute_erosion_risk
+
+risk = compute_erosion_risk(
+    slope_pct=22.0,
+    annual_rainfall_mm=2850.0,
+    soil_type="loam",            # sandy | silt | loam | clay | peat | laterite | alluvial | volcanic
+    current_land_use="bare_land",  # bare_land | grassland | shrubland | agricultural | plantation | degraded_forest | mixed_vegetation
+)
+print(f"Risk score: {risk.composite_score} ({risk.risk_class})")
+print(f"  slope     : {risk.slope_score}")
+print(f"  rainfall  : {risk.rainfall_score}")
+print(f"  soil      : {risk.soil_score}")
+print(f"  land cover: {risk.land_cover_score}")
+```
+
+### Score every site in a DataFrame
+
+```python
+import pandas as pd
+from src.erosion_risk_scorer import score_erosion_dataframe
+
+sites = pd.read_csv("demo/sample_data.csv")
+scored = score_erosion_dataframe(sites)
+print(scored[["site_id", "erosion_risk_score", "erosion_risk_class"]].head())
+```
+
+### Custom weights
+
+Weights must include all four components and sum to 1.0; otherwise a
+clear `ValueError` is raised:
+
+```python
+from src.erosion_risk_scorer import compute_erosion_risk
+
+custom = {"slope": 0.50, "rainfall": 0.20, "soil": 0.20, "land_cover": 0.10}
+risk = compute_erosion_risk(20.0, 2500.0, "sandy", "shrubland", weights=custom)
+```
+
 ## Sample Output
 
 Running `python examples/basic_usage.py` on the bundled demo data produces:
