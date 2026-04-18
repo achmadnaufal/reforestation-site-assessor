@@ -43,6 +43,18 @@ from src.erosion_risk_scorer import (
     score_slope_erosion,
     score_soil_erodibility,
 )
+from src.mcda_topsis import (
+    TopsisResult,
+    VALID_CRITERIA_TYPES,
+    filter_by_thresholds,
+    rank_sites_topsis,
+    rank_sites_topsis_detailed,
+)
+from src.visualization import (
+    ascii_histogram,
+    format_top_sites,
+    score_distribution_table,
+)
 
 __all__ = [
     "SiteAssessor",
@@ -71,4 +83,12 @@ __all__ = [
     "score_rainfall_erosivity",
     "score_slope_erosion",
     "score_soil_erodibility",
+    "TopsisResult",
+    "VALID_CRITERIA_TYPES",
+    "filter_by_thresholds",
+    "rank_sites_topsis",
+    "rank_sites_topsis_detailed",
+    "ascii_histogram",
+    "format_top_sites",
+    "score_distribution_table",
 ]

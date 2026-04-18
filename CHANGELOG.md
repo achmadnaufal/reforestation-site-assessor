@@ -6,6 +6,38 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] - 2026-04-19
+
+### Added
+
+- `src/mcda_topsis.py`: New multi-criteria decision-analysis module implementing
+  TOPSIS (Technique for Order Preference by Similarity to Ideal Solution).
+  Handles mixed benefit/cost criteria, weight re-normalisation to sum 1.0,
+  NaN handling (`drop_na` flag), zero-variance columns, and single-row inputs.
+  Public API:
+  - `rank_sites_topsis` -- returns a new DataFrame with `topsis_score` and
+    `topsis_rank` columns, sorted best-first.
+  - `rank_sites_topsis_detailed` -- returns a frozen `TopsisResult` dataclass
+    exposing the ideal-best and anti-ideal reference vectors for auditing.
+  - `filter_by_thresholds` -- filters a site DataFrame by per-column
+    `(min, max)` bounds (either side optional).
+- `src/visualization.py`: Dependency-free text-based visualisation helpers
+  (`ascii_histogram`, `score_distribution_table`, `format_top_sites`) for
+  terminal and CI-friendly output.
+- `tests/test_mcda_topsis.py`, `tests/test_visualization.py`,
+  `tests/test_integration_mcda.py`: 44 new pytest cases covering happy paths,
+  immutability, edge cases (empty input, missing columns, NaNs, zero variance,
+  invalid weights), and end-to-end integration with the bundled sample data.
+
+### Changed
+
+- `src/__init__.py`: Re-exports the new MCDA and visualisation public API.
+- `README.md`: Added "Step-by-Step Usage", "Multi-Criteria Decision Analysis
+  (TOPSIS)", and "Terminal Visualisation" sections. Updated test-count badge
+  and expected pytest output to 302.
+
+---
+
 ## [Unreleased] - 2026-04-18
 
 ### Added

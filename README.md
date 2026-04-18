@@ -1,7 +1,7 @@
 # Reforestation Site Assessor
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
-![Tests](https://img.shields.io/badge/tests-170%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-302%20passed-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-80%25%2B-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -45,6 +45,106 @@ scored = assessor.run_pipeline(df)
 # Get ranked shortlist
 top_sites = assessor.prioritise(scored)
 print(top_sites[["site_id", "composite_score", "degradation_level"]])
+```
+
+## Step-by-Step Usage
+
+The assessor is designed to be called one step at a time when you want to
+inspect intermediate results, or end-to-end via `run_pipeline` for the
+common case. A typical field-analyst workflow looks like:
+
+1. **Load** raw CSV/Excel into a DataFrame
+   ```python
+   from src.main import SiteAssessor
+   assessor = SiteAssessor()
+   df = assessor.load_data("demo/sample_data.csv")
+   ```
+2. **Preprocess** (normalise column names, strip whitespace, drop empty rows)
+   ```python
+   cleaned = assessor.preprocess(df)
+   ```
+3. **Validate** the schema and field values
+   ```python
+   result = assessor.validate(cleaned)
+   if not result.is_valid:
+       for err in result.errors:
+           print(err)
+   ```
+4. **Filter** candidate sites by hard thresholds (e.g. drop anything
+   steeper than 30 % or drier than 1500 mm/yr)
+   ```python
+   from src.mcda_topsis import filter_by_thresholds
+   shortlist = filter_by_thresholds(
+       cleaned,
+       thresholds={
+           "slope_pct": (None, 30.0),
+           "annual_rainfall_mm": (1500.0, None),
+       },
+   )
+   ```
+5. **Score** with the weighted suitability model
+   ```python
+   scored = assessor.run_pipeline(shortlist)
+   ```
+6. **Prioritise** via either the composite score or TOPSIS MCDA
+   ```python
+   top = assessor.prioritise(scored)
+   ```
+7. **Visualise** the distribution and top candidates in the terminal
+   ```python
+   from src.visualization import score_distribution_table, format_top_sites
+   print(score_distribution_table(scored))
+   print(format_top_sites(top, top_n=5))
+   ```
+8. **Export** results for stakeholders
+   ```python
+   assessor.save_results(top, "out/priority_sites.csv")
+   ```
+
+## Multi-Criteria Decision Analysis (TOPSIS)
+
+For transparent, auditable ranking with explicit benefit/cost semantics per
+criterion, use the TOPSIS helper in `src.mcda_topsis`. It handles weight
+re-normalisation, NaN rows, zero-variance columns, and never mutates the
+input.
+
+```python
+from src.mcda_topsis import rank_sites_topsis
+
+ranked = rank_sites_topsis(
+    df,
+    criteria={
+        "annual_rainfall_mm": "benefit",
+        "slope_pct": "cost",
+        "distance_to_forest_km": "cost",
+        "distance_to_road_km": "cost",
+    },
+    weights={
+        "annual_rainfall_mm": 0.35,
+        "slope_pct": 0.25,
+        "distance_to_forest_km": 0.25,
+        "distance_to_road_km": 0.15,
+    },
+)
+print(ranked[["site_id", "topsis_score", "topsis_rank"]].head())
+```
+
+For auditing, `rank_sites_topsis_detailed` returns a frozen `TopsisResult`
+containing the ranked DataFrame plus the ideal-best and anti-ideal
+reference points actually used.
+
+## Terminal Visualisation
+
+The `src.visualization` module renders dependency-free ASCII summaries:
+
+```python
+from src.visualization import (
+    ascii_histogram, score_distribution_table, format_top_sites,
+)
+
+print(ascii_histogram(scored["composite_score"], bins=8, width=30))
+print(score_distribution_table(scored))
+print(format_top_sites(top, top_n=5))
 ```
 
 ## Example Code
@@ -307,7 +407,7 @@ pytest tests/ --cov=src --cov-report=term-missing
 pytest tests/test_scorer.py -v
 ```
 
-Expected output: **170 tests passed**.
+Expected output: **302 tests passed**.
 
 ## Generating Synthetic Data
 
